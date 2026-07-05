@@ -5182,5 +5182,950 @@ We will cover:
 > **Engineering Note:** Experienced SRAM engineers are often judged less by how quickly they create a schematic and more by how systematically they diagnose failures. A structured debugging methodology is one of the strongest indicators of professional circuit design maturity.
 
 
+Excellent. This chapter is what separates a **student report** from an **industry-quality engineering report**.
+
+Every experienced SRAM engineer knows:
+
+> **The first version of an SRAM almost never works perfectly.**
+
+The real engineering skill lies in **systematically identifying failures, isolating root causes, validating fixes through simulation, and documenting the process**.
+
+For someone with **10+ years of embedded systems experience**, this chapter should reflect the discipline expected from a senior engineer or even a PhD researcher.
+
+This chapter directly satisfies the assignment requirement to document:
+
+* ✅ Simulation attempts
+* ✅ Errors encountered
+* ✅ Fixes applied
+* ✅ AI-assisted debugging
+* ✅ Engineering observations
+
+---
+
+# Week 3 – Chapter 22
+
+# SRAM Debugging Methodology, Failure Analysis & Engineering Case Studies
+
+> **Objective:** Develop a structured methodology for debugging SRAM circuit blocks. Learn to diagnose failures using xschem, ngspice, waveform analysis, AI-assisted debugging, and systematic root-cause analysis while documenting all findings in a GitHub-ready engineering log.
+
+---
+
+# Learning Objectives
+
+After completing this chapter, you should be able to:
+
+* Debug SRAM simulations methodically.
+* Identify root causes instead of symptoms.
+* Analyze waveform failures.
+* Resolve ngspice convergence issues.
+* Debug timing, sizing, and stability problems.
+* Build reusable debugging checklists.
+* Document failures and fixes professionally.
+
+---
+
+# 1. Engineering Debug Philosophy
+
+Never ask:
+
+> "How do I fix this?"
+
+Instead ask:
+
+> "Why did this fail?"
+
+A recommended workflow:
+
+```text
+Problem
+
+↓
+
+Observe
+
+↓
+
+Measure
+
+↓
+
+Hypothesis
+
+↓
+
+Simulation
+
+↓
+
+Correction
+
+↓
+
+Verification
+
+↓
+
+Documentation
+```
+
+This prevents random trial-and-error debugging.
+
+---
+
+# 2. SRAM Debug Hierarchy
+
+Always debug from the smallest block upward:
+
+```text
+Power Supply
+
+↓
+
+Transistor Connections
+
+↓
+
+Individual Gates
+
+↓
+
+6T Bitcell
+
+↓
+
+Peripheral Circuit
+
+↓
+
+Read Path
+
+↓
+
+Write Path
+
+↓
+
+Complete Timing
+```
+
+Never debug the full SRAM if the bitcell itself is not yet verified.
+
+---
+
+# 3. Standard Debug Checklist
+
+Before changing anything:
+
+| Check                           | Status |
+| ------------------------------- | ------ |
+| VDD connected                   | □      |
+| GND connected                   | □      |
+| Correct transistor model        | □      |
+| Node names correct              | □      |
+| Inputs defined                  | □      |
+| Floating nodes removed          | □      |
+| Control signals timed correctly | □      |
+| Initial conditions reasonable   | □      |
+
+Many issues are found here before deeper analysis.
+
+---
+
+# 4. Case Study 1 – Bitcell Does Not Hold Data
+
+### Symptom
+
+```text
+Q changes even when WL = LOW
+```
+
+Possible causes:
+
+* Cross-coupled inverter imbalance.
+* Incorrect transistor sizing.
+* Leakage paths.
+* Floating storage node.
+
+Debug approach:
+
+1. Verify WL is LOW.
+2. Plot Q and QB.
+3. Check inverter symmetry.
+4. Confirm no unintended connection to BL/BLB.
+
+---
+
+# 5. Case Study 2 – Read Failure
+
+### Symptom
+
+```text
+BL and BLB remain identical.
+```
+
+Possible causes:
+
+* Wordline never asserted.
+* Access NMOS disconnected.
+* Bitcell not initialized.
+* Precharge still enabled.
+
+Waveform checklist:
+
+* PRE
+* WL
+* BL
+* BLB
+* Q
+* QB
+
+---
+
+# 6. Case Study 3 – Read Disturb
+
+### Symptom
+
+```text
+Reading changes stored value.
+```
+
+Possible causes:
+
+* Access transistor too strong.
+* Pull-down NMOS too weak.
+* Excessive WL pulse width.
+* Poor cell ratio.
+
+Measure:
+
+* Q during read.
+* BL differential.
+* Read SNM.
+
+---
+
+# 7. Case Study 4 – Write Failure
+
+### Symptom
+
+```text
+Write completes but Q never flips.
+```
+
+Possible causes:
+
+* Weak write driver.
+* Short WE pulse.
+* Wordline pulse too short.
+* Pull-up PMOS too strong.
+
+Measurements:
+
+* BL/BLB voltage.
+* WE timing.
+* WL timing.
+* Q transition.
+
+---
+
+# 8. Case Study 5 – Sense Amplifier Failure
+
+### Symptom
+
+```text
+Random read values.
+```
+
+Possible causes:
+
+* SA_EN too early.
+* Offset mismatch.
+* BL differential too small.
+* Incorrect latch wiring.
+
+Plot:
+
+* BL
+* BLB
+* SA_EN
+* SA_OUT
+
+---
+
+# 9. Case Study 6 – Decoder Failure
+
+### Symptom
+
+```text
+Two rows active simultaneously.
+```
+
+Possible causes:
+
+* Incorrect logic equations.
+* Address inversion error.
+* Decoder glitch.
+
+Verify:
+
+* One-hot outputs.
+* Address transitions.
+* Truth table.
+
+---
+
+# 10. Case Study 7 – Column MUX Failure
+
+### Symptom
+
+```text
+Wrong column read.
+```
+
+Possible causes:
+
+* Incorrect column select.
+* Transmission gate sizing.
+* Timing overlap.
+* Address routing error.
+
+Measure:
+
+* Column select.
+* MUX output.
+* Sense amplifier input.
+
+---
+
+# 11. Case Study 8 – Timing Failure
+
+### Symptom
+
+```text
+Every individual block passes.
+
+Whole SRAM fails.
+```
+
+Possible causes:
+
+* PRE disabled late.
+* SA_EN enabled early.
+* WL pulse too short.
+* Address changes during access.
+
+Review the complete timing diagram from Chapter 18.
+
+---
+
+# 12. ngspice Debugging Guide
+
+| Error               | Root Cause              | Solution                   |
+| ------------------- | ----------------------- | -------------------------- |
+| Singular Matrix     | Floating node           | Add proper connection      |
+| Convergence Failure | Positive feedback       | Use `.nodeset` or `.ic`    |
+| Unknown Subcircuit  | Missing include         | Check SKY130 model path    |
+| No Output           | Incorrect control block | Verify `.tran` and `.plot` |
+| Flat Waveforms      | Input source inactive   | Check pulse definitions    |
+
+---
+
+# 13. xschem Debugging Guide
+
+| Problem              | Check                    |
+| -------------------- | ------------------------ |
+| Missing netlist      | Symbol connectivity      |
+| Wrong pin mapping    | Symbol definition        |
+| Duplicate node names | Net labels               |
+| Missing transistor   | Library path             |
+| Incorrect hierarchy  | Subcircuit instantiation |
+
+---
+
+# 14. AI-Assisted Debugging Workflow
+
+Use AI to assist—not replace—your analysis.
+
+Example prompts:
+
+### Convergence
+
+> Analyze this ngspice convergence error and suggest likely causes.
+
+### Timing
+
+> Review my SRAM timing diagram and identify sequencing problems.
+
+### Waveforms
+
+> Explain why BL discharges before WL is asserted.
+
+### Netlist
+
+> Check this SPICE netlist for floating nodes or missing supplies.
+
+Always validate AI suggestions by re-running simulations.
+
+---
+
+# 15. Root Cause Analysis (RCA)
+
+Document failures using a consistent template.
+
+| Item         | Example                         |
+| ------------ | ------------------------------- |
+| Problem      | Write failure                   |
+| Observation  | Q never changes                 |
+| Root Cause   | WE pulse too short              |
+| Fix          | Increase WE width               |
+| Verification | Successful transient simulation |
+| Status       | Closed                          |
+
+This makes your debugging process reproducible.
+
+---
+
+# 16. Engineering Debug Log
+
+Maintain a log such as:
+
+| ID   | Issue           | Cause                   | Fix                  | Verified |
+| ---- | --------------- | ----------------------- | -------------------- | -------- |
+| D001 | BL not charging | PRE polarity reversed   | Corrected PRE logic  | ✔        |
+| D002 | Write failed    | Driver too weak         | Increased NMOS width | ✔        |
+| D003 | Random reads    | SA_EN early             | Delayed SA_EN        | ✔        |
+| D004 | Wrong row       | Decoder inversion error | Fixed logic          | ✔        |
+
+This is excellent evidence for your GitHub repository.
+
+---
+
+# 17. Failure Severity Classification
+
+| Severity | Description                       |
+| -------- | --------------------------------- |
+| Critical | Simulation cannot run             |
+| Major    | Incorrect read/write operation    |
+| Moderate | Timing or performance degradation |
+| Minor    | Documentation or naming issue     |
+| Cosmetic | No functional impact              |
+
+Use this to prioritize fixes.
+
+---
+
+# 18. GitHub Issue Tracking
+
+Create issues in a consistent format.
+
+Example:
+
+```text
+Issue: D007
+
+Title:
+Sense amplifier resolves incorrect polarity.
+
+Description:
+Observed incorrect output when ΔV < 20 mV.
+
+Root Cause:
+SA_EN asserted before sufficient differential developed.
+
+Resolution:
+Delayed SA_EN by 500 ps.
+
+Verification:
+Transient simulation passed.
+
+Status:
+Closed.
+```
+
+This mirrors industrial issue-tracking practices.
+
+---
+
+# 19. Industry Verification Flow
+
+Professional teams typically follow:
+
+1. Unit-level debugging.
+2. Integration debugging.
+3. Corner-case debugging.
+4. Regression testing.
+5. Peer review.
+6. Sign-off review.
+
+For your report, demonstrate the first three with representative examples and explain the remaining steps.
+
+---
+
+# 20. Industry Gap – Beyond the Assignment
+
+Experienced SRAM designers often use additional techniques such as:
+
+* **Monte Carlo analysis** to evaluate mismatch sensitivity.
+* **PVT corner sweeps** (Slow-Slow, Typical-Typical, Fast-Fast).
+* **Automated regression scripts** for nightly verification.
+* **Golden waveform comparison** to detect regressions.
+* **Formal design reviews** with structured checklists before tape-out.
+
+Even if you do not implement these, mentioning them shows awareness of production SRAM development.
+
+---
+
+# 21. Connection to the Reference Repository
+
+While working with the `SRAM_SKY130` reference repository:
+
+* Compare any simulation failures against the reference implementation.
+* Document whether the issue originated from:
+
+  * AI-generated netlist.
+  * Manual edits.
+  * Environment setup.
+  * Simulation configuration.
+* Record every correction with supporting waveforms and notes.
+
+This demonstrates disciplined engineering rather than simple code generation.
+
+---
+
+# 22. GitHub Deliverables
+
+```text
+Week3/
+└── Chapter22_Debugging/
+    ├── README.md
+    ├── debug_checklist.md
+    ├── issue_log.md
+    ├── root_cause_analysis.md
+    ├── ai_debug_prompts.md
+    ├── waveforms/
+    ├── screenshots/
+    ├── fixed_netlists/
+    ├── lessons_learned.md
+    └── references.md
+```
+
+Recommended additions:
+
+* `before_after_waveforms.md` – Compare failing and corrected simulations.
+* `known_limitations.md` – Record any unresolved issues or assumptions.
+
+---
+
+# 23. Chapter Summary
+
+This chapter established a **professional SRAM debugging methodology**. We developed a structured approach for diagnosing failures, analyzing waveforms, identifying root causes, applying corrections, and verifying fixes. We also introduced AI-assisted debugging, issue tracking, and engineering documentation practices that align with industrial custom-memory development.
+
+---
+
+# Preview of Chapter 23 – Final Technical Report & GitHub Submission
+
+The final chapter will consolidate **everything from Weeks 2 and 3** into a submission-ready package.
+
+It will include:
+
+* Executive summary.
+* Learning outcomes.
+* GitHub repository structure.
+* Complete list of AI prompts.
+* Circuit inventory.
+* Simulation evidence.
+* Waveform gallery.
+* Engineering observations.
+* Industry-standard conclusions.
+* Future work.
+* References.
+* Final submission checklist.
+
+> **Engineering Note:** Chapter 23 is not merely a conclusion—it is the document that demonstrates your ability to transform AI-assisted exploration into a structured, verifiable engineering project suitable for academic evaluation and professional review.
+
+
+Excellent. We have now reached the **final deliverable**.
+
+Everything from **Chapters 1–22** was preparation for this chapter. This chapter is the **submission package** that ties together your technical work, AI-assisted workflow, simulations, and engineering observations into a professional, GitHub-ready report.
+
+The objective is that **someone with no prior SRAM experience should be able to reproduce your work**, while an experienced reviewer should recognize that the work follows a disciplined engineering methodology.
+
+---
+
+# Week 3 – Chapter 23
+
+# Final Technical Report & GitHub Submission
+
+> **Objective:** Produce a complete, professional report and repository for Weeks 2 & 3. Summarize all learning, AI usage, simulations, verification, debugging, and conclusions in a format suitable for academic review and engineering assessment.
+
+---
+
+# 1. Project Overview
+
+**Project Title**
+
+**AI-Assisted Circuit-Level Design and Verification of a 6T SRAM Using SKY130 Open-Source PDK**
+
+**Reference Repository**
+
+[SRAM_SKY130 GitHub Repository](https://github.com/ShonTaware/SRAM_SKY130?utm_source=chatgpt.com)
+
+---
+
+## 1.1 Project Objective
+
+The objective of this project was **not** to build a complete SRAM macro, perform layout generation, GDS creation, or use the full OpenRAM compiler flow.
+
+Instead, the focus was on:
+
+* Understanding the operation of each SRAM circuit block.
+* Recreating key circuits using AI-assisted prompts.
+* Simulating and verifying them with open-source tools.
+* Building engineering knowledge from fundamentals to advanced concepts.
+* Maintaining a complete record of AI interactions and engineering observations.
+
+---
+
+# 2. Scope
+
+### Included
+
+* 6T SRAM Bitcell
+* Static Noise Margin (SNM)
+* Butterfly Curve
+* Read Stability
+* Write Margin
+* Read Disturb
+* Bitline Operation
+* Precharge Circuit
+* Wordline Driver
+* Write Driver
+* Sense Amplifier
+* Row Decoder
+* Column Decoder
+* SRAM Timing
+* SPICE Verification
+* xschem
+* ngspice
+* SKY130 Models
+* AI-assisted Design
+* Debugging
+* GitHub Documentation
+
+### Not Included
+
+* Full OpenRAM Compiler
+* Physical Layout
+* DRC
+* LVS
+* GDSII
+* Complete SRAM Macro Integration
+* Memory Compiler Development
+
+---
+
+# 3. Learning Journey
+
+```text
+SRAM Fundamentals
+        │
+        ▼
+6T Bitcell
+        │
+        ▼
+Read & Write Physics
+        │
+        ▼
+Noise Margins
+        │
+        ▼
+Peripheral Circuits
+        │
+        ▼
+Timing
+        │
+        ▼
+Simulation
+        │
+        ▼
+Debugging
+        │
+        ▼
+AI-assisted Engineering
+        │
+        ▼
+Final Documentation
+```
+
+This progression ensures knowledge is built **brick by brick**, exactly as followed throughout Weeks 2 and 3.
+
+---
+
+# 4. Chapter Completion Matrix
+
+| Chapter | Topic                   | Deliverable              |
+| ------- | ----------------------- | ------------------------ |
+| 1       | SRAM Fundamentals       | Theory                   |
+| 2       | CMOS Inverter Review    | Simulation               |
+| 3       | Cross-Coupled Inverters | Verified                 |
+| 4       | 6T SRAM Bitcell         | SPICE                    |
+| 5       | Read Operation          | Waveforms                |
+| 6       | Write Operation         | Waveforms                |
+| 7       | Read Disturb            | Analysis                 |
+| 8       | SNM                     | Butterfly Curve          |
+| 9       | Write Margin            | Characterization         |
+| 10      | Cell Ratio & Sizing     | Parameter Study          |
+| 11      | Read/Write Trade-offs   | Engineering Analysis     |
+| 12      | Bitlines                | Simulation               |
+| 13      | Precharge               | Verification             |
+| 14      | Wordline Driver         | Verification             |
+| 15      | Write Driver            | Verification             |
+| 16      | Sense Amplifier         | Verification             |
+| 17      | Row & Column Decoders   | Verification             |
+| 18      | SRAM Timing             | Complete Timing Analysis |
+| 20      | Simulation Workflow     | xschem/ngspice           |
+| 21      | AI Prompt Engineering   | Prompt Log               |
+| 22      | Debugging               | Root Cause Analysis      |
+| 23      | Final Report            | Submission Package       |
+
+> *(Note: Chapter numbering reflects the sequence used during the project; the decoder content included both row and column architecture.)*
+
+---
+
+# 5. AI-Assisted Engineering Workflow
+
+```text
+Requirement
+      │
+      ▼
+Prompt
+      │
+      ▼
+AI Response
+      │
+      ▼
+Engineering Review
+      │
+      ▼
+Circuit Generation
+      │
+      ▼
+Simulation
+      │
+      ▼
+Waveform Analysis
+      │
+      ▼
+Debugging
+      │
+      ▼
+Documentation
+      │
+      ▼
+Git Commit
+```
+
+This demonstrates that AI accelerated the workflow while engineering validation remained the primary source of correctness.
+
+---
+
+# 6. Tools Used
+
+| Tool       | Purpose                                |
+| ---------- | -------------------------------------- |
+| ChatGPT    | Theory, prompts, documentation, review |
+| xschem     | Schematic capture                      |
+| ngspice    | Circuit simulation                     |
+| SKY130 PDK | Device models                          |
+| Git        | Version control                        |
+| GitHub     | Documentation and collaboration        |
+
+---
+
+# 7. Repository Structure
+
+```text
+SRAM_SKY130_AI/
+│
+├── Week2/
+│   ├── Chapter01/
+│   ├── ...
+│   └── Chapter11/
+│
+├── Week3/
+│   ├── Chapter12/
+│   ├── ...
+│   └── Chapter23/
+│
+├── prompts/
+├── xschem/
+├── spice/
+├── waveforms/
+├── screenshots/
+├── measurements/
+├── debug_logs/
+├── observations/
+└── README.md
+```
+
+Each chapter should contain:
+
+* README
+* AI prompts
+* Schematics
+* Netlists
+* Simulation results
+* Observations
+* Lessons learned
+
+---
+
+# 8. Simulation Summary
+
+| Circuit         | Simulated | Verified |
+| --------------- | --------- | -------- |
+| 6T Bitcell      | ✔         | ✔        |
+| Read            | ✔         | ✔        |
+| Write           | ✔         | ✔        |
+| Precharge       | ✔         | ✔        |
+| Wordline Driver | ✔         | ✔        |
+| Write Driver    | ✔         | ✔        |
+| Sense Amplifier | ✔         | ✔        |
+| Row Decoder     | ✔         | ✔        |
+| Column Decoder  | ✔         | ✔        |
+| Timing          | ✔         | ✔        |
+
+*(Mark these according to your actual completed simulations.)*
+
+---
+
+# 9. Engineering Observations
+
+Example observations:
+
+* The 6T cell relies on a careful balance between stability and writability.
+* Bitline capacitance dominates read delay in larger arrays.
+* Sense amplifier enable timing is critical for reliable reads.
+* Precharge duration directly impacts access time.
+* AI-generated netlists frequently required manual review before simulation.
+* Systematic debugging reduced verification time.
+
+Record your own findings from each chapter to make the report authentic.
+
+---
+
+# 10. Industry Practices Identified
+
+During the study, the following professional concepts were identified:
+
+* Hierarchical bitlines.
+* Replica bitlines.
+* Self-timed sensing.
+* Monte Carlo mismatch analysis.
+* PVT corner verification.
+* Automated regression testing.
+* ECC integration.
+* Low-power peripheral gating.
+* Spare row/column redundancy.
+
+Although not implemented, understanding these topics bridges the gap between educational projects and production SRAM IP.
+
+---
+
+# 11. Limitations
+
+This work intentionally excluded:
+
+* Physical layout.
+* DRC/LVS.
+* GDSII generation.
+* OpenRAM compiler internals.
+* Full memory compiler development.
+
+These are natural extensions for future work.
+
+---
+
+# 12. Future Work
+
+Suggested next steps:
+
+1. Integrate the designed circuits into a complete SRAM array.
+2. Explore OpenRAM compiler architecture.
+3. Perform layout using MAGIC or KLayout.
+4. Run DRC and LVS.
+5. Generate GDSII.
+6. Perform post-layout extraction and simulation.
+7. Evaluate PVT corners.
+8. Implement Monte Carlo analysis.
+9. Add ECC support.
+10. Compare different bitcell topologies (8T, 10T, FinFET-based cells).
+
+---
+
+# 13. Final Submission Checklist
+
+| Item                        | Status |
+| --------------------------- | ------ |
+| AI prompts documented       | □      |
+| Schematics included         | □      |
+| SPICE netlists included     | □      |
+| Simulation results captured | □      |
+| Waveforms/screenshots added | □      |
+| Errors and fixes documented | □      |
+| Observations written        | □      |
+| References added            | □      |
+| GitHub repository organized | □      |
+| README completed            | □      |
+
+---
+
+# 14. References
+
+* [SRAM_SKY130 Reference Repository](https://github.com/ShonTaware/SRAM_SKY130?utm_source=chatgpt.com)
+* [SKY130 Open PDK Documentation](https://skywater-pdk.readthedocs.io?utm_source=chatgpt.com)
+* [xschem Documentation](https://xschem.sourceforge.io?utm_source=chatgpt.com)
+* [ngspice Official Documentation](https://ngspice.sourceforge.io?utm_source=chatgpt.com)
+
+You should also add any AI model used (e.g., ChatGPT GPT-5.5) in the methodology section with the date of use and the purpose of each interaction.
+
+---
+
+# 15. Conclusion
+
+Over the course of Weeks 2 and 3, this project developed a comprehensive understanding of **circuit-level SRAM design** using an AI-assisted engineering workflow. Beginning with CMOS fundamentals and progressing through the 6T SRAM bitcell, read/write mechanisms, stability analysis, peripheral circuits, timing, simulation, and debugging, each topic was explored incrementally and validated wherever possible using open-source tools.
+
+A key outcome of this work is the establishment of a **reproducible engineering methodology**: AI was used to accelerate learning, generate initial circuits and documentation, and assist with debugging, while all technical conclusions were expected to be supported by schematic review and SPICE simulation.
+
+The resulting GitHub repository serves not only as a record of completed work but also as a structured learning resource that can guide another engineer from foundational SRAM concepts to a practical understanding of circuit verification using the SKY130 ecosystem.
+
+---
+
+# Overall Assessment
+
+Looking at the original Week 2 & Week 3 assignment, this material now provides coverage of:
+
+* ✅ 6T SRAM bitcell operation
+* ✅ Read/write operation and stability
+* ✅ Butterfly curve and SNM
+* ✅ Read disturb
+* ✅ Write margin
+* ✅ Bitline behavior
+* ✅ Precharge circuit
+* ✅ Wordline control
+* ✅ Write driver
+* ✅ Sense amplifier
+* ✅ Row decoder
+* ✅ Column decoder
+* ✅ SRAM timing sequence
+* ✅ AI prompt engineering
+* ✅ SPICE/netlist examples
+* ✅ xschem and ngspice workflow
+* ✅ Simulation methodology
+* ✅ Debugging strategy
+* ✅ GitHub documentation structure
+* ✅ Industry-standard engineering practices and future directions
+
+From the perspective of the original assignment, this forms a complete **Week 2 & Week 3 circuit-design study guide and submission framework**, with a depth appropriate for an experienced embedded engineer transitioning into SRAM circuit design.
 
 
