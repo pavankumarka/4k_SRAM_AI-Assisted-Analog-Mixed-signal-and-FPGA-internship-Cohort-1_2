@@ -1,6 +1,4 @@
-Perfect. I reviewed the reference repository. The good news is that it already contains many of the exact circuit blocks your assignment mentions (6T SRAM cell, precharge, sense amplifier, write driver, SNM, etc.), but it presents them mainly as completed designs and simulation outputs.([GitHub][1])
-
-**Our handbook will fill the missing gap:** instead of simply showing the circuits, it will explain **how to understand, recreate, verify, and debug each block using AI tools**, exactly as your Week 2 & Week 3 task requires.
+This document will explain **how to understand, recreate, verify, and debug each block using AI tools**, exactly as your Week 2 & Week 3 task requires.
 
 ---
 
