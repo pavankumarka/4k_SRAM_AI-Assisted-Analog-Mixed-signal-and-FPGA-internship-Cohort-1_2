@@ -1,8 +1,6 @@
-Excellent. We are now officially entering **Week 3**.
-
 From here onward, we leave the **6T SRAM bitcell** and move into the **peripheral circuits**. This is exactly how SRAM is developed in industry: the bitcell is designed and characterized first, then the peripheral circuits are built around it.
 
-For your assignment, this chapter satisfies the requirement to understand **bitline behaviour**, which was explicitly mentioned in the original Week 2 & 3 objective.
+This chapter satisfies the requirement to understand **bitline behaviour**, which was explicitly mentioned in the original Week 2 & 3 objective.
 
 ---
 
@@ -4239,6 +4237,950 @@ While exploring the `SRAM_SKY130` repository:
 This chapter unified all of the SRAM building blocks into a **complete memory access sequence**. We studied the timing relationships between precharge, decoding, wordline activation, write enable, bitline development, sense amplifier enable, and data output. We also introduced key SRAM timing parameters, critical paths, characterization experiments, and industrial timing verification practices.
 
 At this stage, you have covered the **complete circuit-level architecture of a 6T SRAM**, from the storage cell to the peripheral circuitry and the full read/write timing sequence. The remaining chapters will focus on **integrated simulation, AI-assisted workflows, debugging methodology, and producing a professional GitHub-ready report** that aligns with your Week 2 & Week 3 deliverables.
+
+Excellent. This chapter is where your work becomes **engineering evidence** instead of just theory.
+
+In industry, **a circuit is considered "designed" only after it has been verified**. Every SRAM designer spends a significant amount of time creating simulation environments, running corner cases, analyzing waveforms, debugging convergence issues, and documenting results.
+
+This chapter aligns directly with your assignment requirements:
+
+* ✅ Test generated circuits/netlists.
+* ✅ Use xschem.
+* ✅ Use ngspice.
+* ✅ Use SKY130 models.
+* ✅ Record waveforms.
+* ✅ Record errors and fixes.
+* ✅ Document observations in GitHub.
+
+This chapter also bridges the gap between a student project and a professional SRAM verification workflow.
+
+---
+
+# Week 3 – Chapter 20
+
+# SRAM Circuit Verification Using xschem, ngspice & SKY130
+
+> **Objective:** Build a structured verification methodology for all SRAM circuit blocks developed during Weeks 2 and 3. Learn how to create reusable testbenches, run transient and DC simulations, capture waveforms, debug issues, and document results in a GitHub-ready format.
+
+---
+
+# Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+* Build reusable SPICE testbenches.
+* Organize simulations by circuit block.
+* Use xschem efficiently.
+* Simulate using ngspice.
+* Integrate SKY130 transistor models.
+* Capture waveforms and measurements.
+* Debug simulation failures.
+* Produce professional verification reports.
+
+---
+
+# 1. Industry Verification Philosophy
+
+Professional SRAM development follows a layered verification flow:
+
+```text
+Specification
+      │
+      ▼
+Circuit Design
+      │
+      ▼
+Schematic Verification
+      │
+      ▼
+SPICE Simulation
+      │
+      ▼
+Waveform Analysis
+      │
+      ▼
+Corner Verification
+      │
+      ▼
+Documentation
+```
+
+**Important:** Never move to the next block until the current block is verified.
+
+---
+
+# 2. Recommended Project Structure
+
+```text
+SRAM_SKY130_AI/
+
+├── Week2/
+├── Week3/
+│
+├── simulations/
+│   ├── bitcell/
+│   ├── snm/
+│   ├── read/
+│   ├── write/
+│   ├── precharge/
+│   ├── wordline/
+│   ├── write_driver/
+│   ├── sense_amp/
+│   ├── row_decoder/
+│   ├── column_decoder/
+│   └── timing/
+│
+├── models/
+│   └── sky130/
+│
+├── xschem/
+├── waveforms/
+├── screenshots/
+├── prompts/
+└── README.md
+```
+
+This organization mirrors how many custom circuit teams separate schematics, models, simulations, and documentation.
+
+---
+
+# 3. Verification Flow Per Circuit Block
+
+For **every** block (bitcell, precharge, sense amp, etc.) follow the same workflow:
+
+```text
+Create Schematic
+      │
+Generate Netlist
+      │
+Run ngspice
+      │
+Check Errors
+      │
+Fix Issues
+      │
+Capture Waveforms
+      │
+Document Observations
+```
+
+Consistency is more important than complexity.
+
+---
+
+# 4. xschem Workflow
+
+![Image](https://images.openai.com/static-rsc-4/kVXmJH6W3KlhBAvSqx1h-ki5OVRDuyaA-IKMSxcV7qSAgOw27CP4dGcsBqI2gnvyTsrHV0gte6j4QFMZDvaUZQcRDoqgSbQNBAQa3znS-WmXzdk-dEE3zok-3XlH9_8Dh0eSrsvqjwQuSse3HD_Q6ifF-j7eL4pyW7GTFkf3SoNfhxT8ECaUbf_zJTZOMrOB?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/3_NLeZMFkLYGjj1ZGXBt5VHrEAI6TjW2EyTlTFS6cguqiwL-nxrfSC1tIQDfMCH63Ov1r1_36buKMy6eDGr1Te52YJAzlaYoEfjPTCdZ7byY5XbWvEfRoby4Xf7RQ1M2wYvFoFH4dkcJ5SMtEEMqyI4PEDf95IrUn3vimHkEx2Bls733fTcINzrzu-sjoiYe?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/aq4QmoVp8LrXYlgl57NpTFUkqyOsYazRV0iYjOa3YyP0d7qNnrgLsSKFT-RNDv-m3Lk-2bUX7Ltvhk4fSlSe7RRcud8zSYsF8PF3aD7NKh1ivFfadMSVwAMVn1QGqDqiTHT7gTeoy9plbsVXR2oty7Q2iKmPlPKGxEX_heyP05rUt5uha8CT_r0kiJqyJtzK?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/iwogKVVC-ax1H-sYh7H6nv1EeN38d24m1hCJOu89B733EaPAOwdxtEREaB5zD5ARgnyXSH-OryUQncGfai3zIi58GTlHxtJVCcVqTyqkgB-f1FZ8UF994zSwkcEVDV8esnJxPEDmQTDH2tqDwQo0vgXNRcY1QJLPOI0TKrwJQYWSR8pK9v9_9jO_vyjTeTFz?purpose=fullsize)
+
+Typical steps:
+
+1. Draw the schematic.
+2. Add power supplies.
+3. Add voltage pulse sources.
+4. Connect SKY130 transistors.
+5. Generate the SPICE netlist.
+6. Launch ngspice.
+7. Inspect waveforms.
+8. Save screenshots.
+
+For every chapter, keep both the `.sch` file and the generated `.spice` netlist.
+
+---
+
+# 5. Standard Testbench Structure
+
+A reusable testbench should include:
+
+```text
+Power Supply (VDD)
+        │
+Input Sources (Pulse/DC)
+        │
+Circuit Under Test (CUT)
+        │
+Load Elements
+        │
+Simulation Control
+        │
+Measurement Commands
+```
+
+Avoid embedding the testbench inside the design itself. Keep it separate so it can be reused.
+
+---
+
+# 6. Example ngspice Skeleton
+
+```spice
+*-------------------------------------------------
+* SRAM Testbench
+*-------------------------------------------------
+
+.include sky130_models.spice
+
+VDD VDD 0 1.8
+VGND 0 0 0
+
+* Input stimulus
+VIN IN 0 PULSE(0 1.8 2n 50p 50p 5n 10n)
+
+* Circuit under test
+XU1 ...
+
+.tran 10p 40n
+
+.control
+run
+
+plot v(IN)
+
+.endc
+
+.end
+```
+
+Use this as a template for every circuit block.
+
+---
+
+# 7. Simulation Types
+
+| Simulation                               | Purpose                | Used In                    |
+| ---------------------------------------- | ---------------------- | -------------------------- |
+| DC                                       | Static operating point | SNM, butterfly curves      |
+| Transient (.tran)                        | Time-domain behavior   | Read, write, timing        |
+| Operating Point (.op)                    | Bias verification      | Peripheral circuits        |
+| Parameter Sweep (.step or manual sweeps) | Characterization       | Driver sizing, capacitance |
+
+For Weeks 2 & 3, transient and DC simulations are the most important.
+
+---
+
+# 8. Waveforms to Capture
+
+For each chapter, include screenshots of the key signals.
+
+| Chapter        | Minimum Waveforms            |
+| -------------- | ---------------------------- |
+| Bitcell        | Q, QB                        |
+| Read           | BL, BLB, WL                  |
+| Write          | BL, BLB, Q, QB               |
+| Precharge      | PRE, BL, BLB                 |
+| Wordline       | Decoder, WL                  |
+| Write Driver   | WE, BL, BLB                  |
+| Sense Amp      | BL, BLB, SA_OUT              |
+| Row Decoder    | Address, WL outputs          |
+| Column Decoder | Column Select, MUX output    |
+| Timing         | PRE, WL, WE, SA_EN, DATA_OUT |
+
+---
+
+# 9. Measurement Checklist
+
+For every simulation, record:
+
+* Supply voltage (VDD)
+* Temperature (if specified)
+* Simulation type
+* Time step
+* Total simulation time
+* Initial conditions
+* Key measurements:
+
+  * Delay
+  * Rise time
+  * Fall time
+  * Voltage levels
+  * Differential voltage
+
+Present these in markdown tables for easy comparison.
+
+---
+
+# 10. AI Prompt Sequence
+
+### Prompt 1 – Testbench
+
+> Generate an ngspice testbench for a SKY130 6T SRAM bitcell transient simulation.
+
+### Prompt 2 – Measurements
+
+> Add `.measure` statements to calculate propagation delay and rise/fall time.
+
+### Prompt 3 – Verification
+
+> Review this SPICE netlist for missing power supplies, floating nodes, or incorrect includes.
+
+### Prompt 4 – Debugging
+
+> Explain why ngspice reports a convergence error in this SRAM simulation.
+
+### Prompt 5 – Documentation
+
+> Summarize the observed waveform behavior and identify whether the simulation passed or failed.
+
+---
+
+# 11. Common ngspice Errors
+
+| Error               | Likely Cause                                        | Resolution                                  |
+| ------------------- | --------------------------------------------------- | ------------------------------------------- |
+| Unknown subcircuit  | Missing `.include`                                  | Verify SKY130 model path                    |
+| Floating node       | Unconnected wire                                    | Add proper connection or resistor           |
+| Convergence failure | Positive feedback or unrealistic initial conditions | Use `.ic`, `.nodeset`, or adjust tolerances |
+| Singular matrix     | Shorted or floating nodes                           | Inspect connectivity                        |
+| No waveform output  | Missing `.plot` or simulation command               | Check `.control` block                      |
+
+---
+
+# 12. Common xschem Issues
+
+| Issue                    | Cause                     | Solution                       |
+| ------------------------ | ------------------------- | ------------------------------ |
+| Netlist generation fails | Missing symbols or pins   | Verify schematic completeness  |
+| Wrong pin order          | Symbol mismatch           | Check symbol definition        |
+| Simulation doesn't start | Incorrect ngspice command | Verify simulator configuration |
+| Missing model            | Wrong include path        | Correct SKY130 model location  |
+| Unexpected node names    | Auto-generated nets       | Rename critical nets clearly   |
+
+---
+
+# 13. Characterization Matrix
+
+Create a table to track every experiment.
+
+| Block     | Parameter Swept     | Measured Result | Pass/Fail |
+| --------- | ------------------- | --------------- | --------- |
+| Bitcell   | Pull-up ratio       | SNM             | Pass      |
+| Read      | Bitline capacitance | Delay           | Pass      |
+| Write     | Driver width        | Write time      | Pass      |
+| Precharge | PMOS width          | Charging time   | Pass      |
+| Wordline  | Load                | Rise time       | Pass      |
+| Sense Amp | ΔV                  | Resolution time | Pass      |
+| Decoder   | Load                | Delay           | Pass      |
+
+This becomes valuable evidence in your report.
+
+---
+
+# 14. GitHub Documentation Template
+
+For **every chapter**, maintain:
+
+```text
+README.md
+```
+
+Sections:
+
+1. Objective
+2. Theory
+3. AI Prompts Used
+4. Schematic
+5. SPICE Netlist
+6. Simulation Setup
+7. Waveforms
+8. Measurements
+9. Observations
+10. Errors Encountered
+11. Fixes Applied
+12. Lessons Learned
+13. References
+
+This uniform structure makes the repository easy to review.
+
+---
+
+# 15. Industry Verification Flow
+
+A professional SRAM verification plan typically includes:
+
+1. Functional verification.
+2. Transient timing verification.
+3. DC operating point checks.
+4. Parameter sweeps.
+5. PVT corner analysis.
+6. Monte Carlo mismatch analysis.
+7. Regression testing after design changes.
+
+For Weeks 2 & 3, focus on the first four while describing the remaining steps.
+
+---
+
+# 16. Industry Gap – Beyond the Assignment
+
+Experienced SRAM designers go further by:
+
+* Automating simulations with shell or Python scripts.
+* Running regression suites after every schematic change.
+* Using version control to track netlist revisions.
+* Comparing waveforms automatically against golden references.
+* Recording performance metrics (delay, power, SNM) in dashboards.
+
+Mentioning these practices in your report demonstrates awareness of industrial workflows.
+
+---
+
+# 17. Connection to the Reference Repository
+
+Using the `SRAM_SKY130` repository as a reference:
+
+* Compare your generated schematics and netlists with the repository versions.
+* Note any differences in transistor sizing, naming conventions, or testbench organization.
+* Record simulation results and explain any mismatches.
+* Document all AI-generated prompts, successful outputs, failed attempts, and the corrections you made.
+
+This satisfies the assignment's requirement to maintain a complete AI-assisted engineering record.
+
+---
+
+# 18. GitHub Deliverables
+
+```text
+Week3/
+└── Chapter20_Simulation/
+    ├── README.md
+    ├── simulation_plan.md
+    ├── prompts.md
+    ├── spice/
+    ├── xschem/
+    ├── waveforms/
+    ├── screenshots/
+    ├── measurements.md
+    ├── characterization_matrix.md
+    ├── debug_notes.md
+    ├── lessons_learned.md
+    └── references.md
+```
+
+---
+
+# 19. Chapter Summary
+
+This chapter established a **professional SRAM circuit verification methodology**. Rather than treating simulations as isolated tasks, we developed a repeatable workflow for schematic creation, SPICE testbench development, transient and DC analysis, waveform capture, debugging, characterization, and GitHub documentation. By following this process consistently for every SRAM building block, your Week 2 & Week 3 work becomes reproducible, reviewable, and aligned with industry expectations.
+
+---
+
+# Preview of Chapter 21 – AI-Assisted Prompt Engineering for SRAM Design
+
+The next chapter focuses on **using AI effectively as an engineering assistant** rather than a code generator.
+
+We will cover:
+
+* Designing low-token, high-quality prompts.
+* Prompt refinement strategies.
+* Verifying AI-generated circuits.
+* Comparing outputs from different AI models.
+* Recording prompt history for reproducibility.
+* Hallucination detection.
+* Building an AI engineering workflow suitable for professional documentation.
+
+This chapter directly addresses the assignment requirement to **maintain a GitHub repository documenting AI prompts, generated circuits, simulation attempts, errors, fixes, and engineering observations**.
+
+Excellent. This chapter is **the distinguishing feature of your assignment**.
+
+Most SRAM reports explain the circuits. Your assignment explicitly asks you to **demonstrate AI-assisted engineering**. That means the reviewer is interested not only in the final schematics, but also in **how you used AI responsibly, verified its outputs, corrected mistakes, and documented the process**.
+
+For an engineer with **10+ years of experience**, AI should be treated as a **technical assistant**, not an authority. Every generated circuit, explanation, or SPICE netlist must be verified.
+
+This chapter directly satisfies the assignment requirement:
+
+* ✅ Use ChatGPT, Codex, or similar AI tools.
+* ✅ Generate low-token prompts.
+* ✅ Produce SPICE/netlist examples.
+* ✅ Document prompts, generated files, errors, fixes, and observations.
+* ✅ Maintain a GitHub repository with the complete AI-assisted workflow.
+
+---
+
+# Week 3 – Chapter 21
+
+# AI-Assisted SRAM Circuit Design – Prompt Engineering & Engineering Workflow
+
+> **Objective:** Learn how to use AI tools effectively to accelerate SRAM circuit design, SPICE generation, simulation, debugging, and documentation while maintaining engineering rigor and reproducibility.
+
+---
+
+# Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+* Write effective low-token prompts.
+* Refine prompts iteratively.
+* Verify AI-generated circuits.
+* Detect hallucinations and inaccuracies.
+* Compare outputs from multiple AI models.
+* Build an auditable prompt history.
+* Integrate AI into a professional SRAM design workflow.
+* Produce a GitHub-ready AI engineering log.
+
+---
+
+# 1. AI Is an Engineering Assistant, Not a Replacement
+
+A productive workflow is:
+
+```text id="f6tw1s"
+Understand Requirement
+        │
+        ▼
+Ask AI
+        │
+        ▼
+Receive Draft
+        │
+        ▼
+Engineer Reviews
+        │
+        ▼
+Simulation
+        │
+        ▼
+Verification
+        │
+        ▼
+Documentation
+```
+
+The engineer remains responsible for correctness.
+
+---
+
+# 2. Industry Workflow
+
+Modern semiconductor companies increasingly use AI for:
+
+* Drafting SPICE testbenches.
+* Generating HDL skeletons.
+* Explaining circuit behavior.
+* Reviewing schematics.
+* Debugging simulation errors.
+* Writing documentation.
+
+However, **sign-off decisions remain with engineers** after simulation and review.
+
+---
+
+# 3. Prompt Engineering Principles
+
+A good engineering prompt is:
+
+* Specific.
+* Short.
+* Includes the technology.
+* Defines the expected output.
+* States constraints.
+
+Example:
+
+```text id="muvr2j"
+Generate a SKY130-compatible 6T SRAM bitcell SPICE netlist with labeled nodes and comments.
+```
+
+Avoid vague prompts like:
+
+```text id="4t1g2d"
+Build SRAM.
+```
+
+---
+
+# 4. Prompt Refinement Workflow
+
+```text id="k3o7ay"
+Prompt V1
+      │
+      ▼
+AI Response
+      │
+      ▼
+Review
+      │
+      ▼
+Refined Prompt
+      │
+      ▼
+Improved Response
+      │
+      ▼
+Simulation
+      │
+      ▼
+Documentation
+```
+
+Record each iteration rather than deleting earlier attempts.
+
+---
+
+# 5. Recommended Prompt Categories
+
+| Category      | Example                                                      |
+| ------------- | ------------------------------------------------------------ |
+| Theory        | Explain read disturb in a 6T SRAM.                           |
+| Circuit       | Generate a precharge circuit using SKY130 PMOS devices.      |
+| SPICE         | Create an ngspice transient testbench for a write operation. |
+| Debugging     | Why does this latch fail to resolve correctly?               |
+| Review        | Identify sizing or timing issues in this circuit.            |
+| Documentation | Summarize waveform observations for GitHub.                  |
+
+---
+
+# 6. Low-Token Prompt Examples
+
+### Theory
+
+```text id="d4twy0"
+Explain SRAM butterfly curve.
+```
+
+### SPICE
+
+```text id="b31z2u"
+Generate SKY130 transient testbench for 6T SRAM read.
+```
+
+### Timing
+
+```text id="2ib2vk"
+Draw SRAM read timing with PRE, WL, SA_EN.
+```
+
+### Debugging
+
+```text id="ukw6vx"
+Why does BL not discharge?
+```
+
+### Verification
+
+```text id="frz4u5"
+Review this SRAM netlist for floating nodes.
+```
+
+Short prompts are easier to reuse and document.
+
+---
+
+# 7. AI Verification Checklist
+
+Every AI-generated output should be reviewed using the following checklist:
+
+| Item                     | Verify |
+| ------------------------ | ------ |
+| Correct transistor type  | ✔      |
+| Correct node names       | ✔      |
+| Proper power connections | ✔      |
+| Valid SPICE syntax       | ✔      |
+| Compatible with SKY130   | ✔      |
+| Simulation runs          | ✔      |
+| Waveforms match theory   | ✔      |
+
+Never accept AI output without verification.
+
+---
+
+# 8. Hallucination Detection
+
+Common AI mistakes include:
+
+* Inventing transistor names.
+* Using unsupported SPICE syntax.
+* Omitting power rails.
+* Incorrect PMOS/NMOS orientation.
+* Missing control signals.
+* Unrealistic timing.
+
+Detection method:
+
+```text id="f0b5i4"
+AI Output
+
+↓
+
+Simulation
+
+↓
+
+Review
+
+↓
+
+Correction
+
+↓
+
+Verified Design
+```
+
+Simulation is the final authority.
+
+---
+
+# 9. Comparing AI Models
+
+You may use different tools, for example:
+
+| AI Tool        | Typical Strength                    |
+| -------------- | ----------------------------------- |
+| ChatGPT        | Theory, prompts, documentation      |
+| Codex          | Code and SPICE generation           |
+| GitHub Copilot | Code completion                     |
+| Claude         | Long-form explanations              |
+| Gemini         | Alternative reasoning and summaries |
+
+Record:
+
+* Model name.
+* Date.
+* Prompt.
+* Output quality.
+* Corrections made.
+
+This demonstrates reproducibility.
+
+---
+
+# 10. AI Prompt Log
+
+Maintain a prompt history.
+
+Example:
+
+| ID   | Prompt                   | Model   | Result    |
+| ---- | ------------------------ | ------- | --------- |
+| P001 | Explain 6T SRAM          | ChatGPT | Accepted  |
+| P002 | Generate precharge SPICE | ChatGPT | Corrected |
+| P003 | Review write driver      | ChatGPT | Accepted  |
+| P004 | Debug convergence        | ChatGPT | Corrected |
+
+---
+
+# 11. AI Engineering Workflow
+
+```text id="n7m2zp"
+Requirement
+
+↓
+
+Prompt
+
+↓
+
+AI Output
+
+↓
+
+Manual Review
+
+↓
+
+Simulation
+
+↓
+
+Waveform
+
+↓
+
+Fixes
+
+↓
+
+Git Commit
+
+↓
+
+Documentation
+```
+
+Each stage should leave an auditable record.
+
+---
+
+# 12. GitHub Repository Organization
+
+```text id="7q4mti"
+SRAM_SKY130_AI/
+
+├── prompts/
+│   ├── theory.md
+│   ├── spice.md
+│   ├── debugging.md
+│   └── verification.md
+│
+├── ai_outputs/
+│   ├── raw/
+│   └── corrected/
+│
+├── simulations/
+├── screenshots/
+├── waveforms/
+├── observations/
+└── README.md
+```
+
+Keep both **raw AI outputs** and **corrected versions** to show your engineering review process.
+
+---
+
+# 13. AI-Assisted Debugging Workflow
+
+When a simulation fails:
+
+```text id="l5x7be"
+Simulation Error
+
+↓
+
+Capture Error Message
+
+↓
+
+Ask AI
+
+↓
+
+Review Suggestion
+
+↓
+
+Apply Fix
+
+↓
+
+Re-run Simulation
+
+↓
+
+Record Outcome
+```
+
+Document:
+
+* Original error.
+* AI suggestion.
+* Final resolution.
+
+---
+
+# 14. Documentation Template
+
+For every AI interaction, record:
+
+| Field        | Example                     |
+| ------------ | --------------------------- |
+| Date         | 2026-07-05                  |
+| AI Model     | ChatGPT GPT-5.5             |
+| Prompt       | Generate write driver SPICE |
+| Output       | Draft netlist               |
+| Verification | Simulated in ngspice        |
+| Issues Found | Missing VDD node            |
+| Fix Applied  | Added power supply          |
+| Final Status | Pass                        |
+
+This level of detail demonstrates professional engineering practice.
+
+---
+
+# 15. Common Mistakes
+
+| Mistake                              | Better Practice                    |
+| ------------------------------------ | ---------------------------------- |
+| Accepting AI output without review   | Simulate and verify                |
+| Overly broad prompts                 | Use focused prompts                |
+| Not recording prompts                | Maintain prompt history            |
+| Deleting failed attempts             | Document corrections               |
+| Mixing verified and unverified files | Separate raw and validated outputs |
+
+---
+
+# 16. Industry Gap – Beyond the Assignment
+
+Leading semiconductor companies are beginning to integrate AI into:
+
+* Schematic review assistance.
+* Automated SPICE testbench generation.
+* Analog design-space exploration.
+* Regression result summarization.
+* Documentation generation.
+* Bug triage.
+
+However, AI-generated circuits still require:
+
+* Human review.
+* Simulation.
+* Corner verification.
+* Design sign-off.
+
+Mentioning this distinction strengthens your report.
+
+---
+
+# 17. Connection to the Reference Repository
+
+Using the `SRAM_SKY130` repository:
+
+* Record which files were studied.
+* Note which AI prompts were inspired by the repository.
+* Compare AI-generated circuits with the reference implementation.
+* Document differences and justify any changes.
+* Include simulation evidence supporting your conclusions.
+
+This demonstrates that AI was used to **understand and recreate** circuit blocks rather than simply copying existing designs.
+
+---
+
+# 18. GitHub Deliverables
+
+```text id="8xq4fr"
+Week3/
+└── Chapter21_AI_Prompts/
+    ├── README.md
+    ├── prompt_log.md
+    ├── prompt_templates.md
+    ├── ai_outputs/
+    │   ├── raw/
+    │   └── corrected/
+    ├── verification_checklist.md
+    ├── hallucination_log.md
+    ├── model_comparison.md
+    ├── observations.md
+    ├── lessons_learned.md
+    └── references.md
+```
+
+---
+
+# 19. Chapter Summary
+
+This chapter established a **professional AI-assisted engineering workflow** for SRAM circuit design. We covered prompt engineering, iterative refinement, verification of AI-generated outputs, hallucination detection, multi-model comparison, debugging workflows, and structured documentation. The emphasis throughout was that AI accelerates engineering, but **simulation and critical review remain the basis for technical correctness**.
+
+---
+
+# Preview of Chapter 22 – SRAM Debugging & Engineering Case Studies
+
+The next chapter focuses on **real-world debugging methodology**, bringing together everything from Weeks 2 and 3.
+
+We will cover:
+
+* Common SPICE convergence failures.
+* Read and write failure analysis.
+* Bitline and wordline timing issues.
+* Sense amplifier offset problems.
+* Decoder logic errors.
+* Systematic root-cause analysis.
+* AI-assisted debugging workflows.
+* GitHub issue tracking and resolution documentation.
+
+> **Engineering Note:** Experienced SRAM engineers are often judged less by how quickly they create a schematic and more by how systematically they diagnose failures. A structured debugging methodology is one of the strongest indicators of professional circuit design maturity.
+
 
 
 
