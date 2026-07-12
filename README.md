@@ -5,4 +5,4 @@ All pre-requisites are captured [here](https://github.com/pavankumarka/4k_SRAM_p
 
 [Week2and3:Tasks List](https://github.com/pavankumarka/4k_SRAM_AI-Assisted-Analog-Mixed-signal-and-FPGA-internship-Cohort-1_2/tree/main/week2and3) are defined here. Associated contents are covered [Week2and3 Task Contents](https://github.com/pavankumarka/4k_SRAM_AI-Assisted-Analog-Mixed-signal-and-FPGA-internship-Cohort-1_2/tree/main/week2and3), and task planner is added [here](https://github.com/pavankumarka/4k_SRAM_AI-Assisted-Analog-Mixed-signal-and-FPGA-internship-Cohort-1_2/blob/main/week2and3/SRAM_Week2_Week3_Chapterwise_Todo.xlsx)
 
-[Week4: Task List]() is to create a 20minutes video of overall plan, captured at [SRAM_presentation]().
+[Week4: Task List](https://github.com/pavankumarka/4k_SRAM_AI-Assisted-Analog-Mixed-signal-and-FPGA-internship-Cohort-1_2/blob/main/week4/README.md) is to create a 20minutes video of overall plan, captured at [SRAM_presentation](https://drive.google.com/file/d/1RH9omlE7UoQm9pFNzMPMI0aQQ5nncRCF/view?usp=drive_link).
