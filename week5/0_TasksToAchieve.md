@@ -437,9 +437,7 @@ A **2-word × 16-bit SRAM** means:
 * Data width = 16 bits
 * Total storage:
 
-[
-2 \times 16 = 32 \text{ bits}
-]
+         2 Xtimes 16 = 32 Xtext{ bits }
 
 Address requirement:
 
