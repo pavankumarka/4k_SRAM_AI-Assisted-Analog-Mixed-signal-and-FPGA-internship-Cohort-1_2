@@ -416,6 +416,234 @@ In simple terms:
 **Week 5 = "Can I prove this SRAM is physically correct and behaves like the timing model predicts?"**
 
 
+-------------------------------------------------------------------------------------------------------------------------
+
+
+Week5 Task1 Plan: We will start with **Week 5 – Item 1: Generate Small SRAM Macro Using OpenRAM**.
+
+The goal of this item is:
+
+> Generate a **2-word × 16-bit single-port SRAM macro using OpenRAM with SKY130**, and preserve all generated views and logs.
+
+Before running commands, we will verify your environment because OpenRAM generation depends on correct paths.
+
+---
+
+# Item 1.1 — Understand the SRAM Configuration
+
+A **2-word × 16-bit SRAM** means:
+
+* Number of words = 2
+* Data width = 16 bits
+* Total storage:
+
+[
+2 \times 16 = 32 \text{ bits}
+]
+
+Address requirement:
+
+[
+log_2(2)=1
+]
+
+Therefore:
+
+| Signal       | Width   |
+| ------------ | ------- |
+| Address      | 1 bit   |
+| Data input   | 16 bits |
+| Data output  | 16 bits |
+| Word enable  | 1       |
+| Write enable | 1       |
+| Chip select  | 1       |
+
+---
+
+# Item 1.2 — Verify Required Tools
+
+You should have:
+
+| Tool       | Purpose          |
+| ---------- | ---------------- |
+| OpenRAM    | SRAM compiler    |
+| SKY130 PDK | Technology files |
+| Python3    | Run compiler     |
+| Magic      | Layout viewing   |
+| Netgen     | LVS              |
+| ngspice    | Simulation       |
+
+Check:
+
+```bash
+python3 --version
+```
+
+```bash
+echo $OPENRAM_HOME
+```
+
+```bash
+echo $OPENRAM_TECH
+```
+
+From your earlier setup I saw:
+
+```
+OPENRAM_HOME=/home/hp/openram/compiler
+```
+
+and OpenRAM import was successful, so this part looks OK.
+
+---
+
+# Item 1.3 — Create Week 5 Workspace
+
+Create:
+
+```bash
+mkdir -p ~/SRAM_WEEK5
+cd ~/SRAM_WEEK5
+```
+
+Create folders:
+
+```bash
+mkdir config logs gds lef liberty spice verilog
+```
+
+Your structure:
+
+```
+SRAM_WEEK5/
+
+├── config
+├── logs
+├── gds
+├── lef
+├── liberty
+├── spice
+└── verilog
+```
+
+---
+
+# Item 1.4 — Create OpenRAM Configuration
+
+Create:
+
+```bash
+cd config
+nano sram_2x16.py
+```
+
+Basic configuration:
+
+```python
+# SRAM size
+word_size = 16
+num_words = 2
+
+# Technology
+tech_name = "sky130"
+
+# Output
+output_name = "sram_2x16"
+
+# Process corners
+process_corners = ["TT"]
+
+# Voltage
+nominal_voltage = 1.8
+
+# Temperature
+nominal_temperature = 25
+
+# Output formats
+output_path = "../"
+```
+
+Save.
+
+---
+
+# Item 1.5 — Run OpenRAM
+
+From SRAM_WEEK5 directory:
+
+```bash
+cd ~/SRAM_WEEK5
+```
+
+Run:
+
+```bash
+python3 $OPENRAM_HOME/openram.py config/sram_2x16.py
+```
+
+Expected generation:
+
+```
+sram_2x16.gds
+sram_2x16.lef
+sram_2x16.lib
+sram_2x16.v
+sram_2x16.sp
+```
+
+---
+
+# Item 1.6 — Capture Log
+
+Run:
+
+```bash
+python3 $OPENRAM_HOME/openram.py config/sram_2x16.py \
+| tee logs/openram_generation.log
+```
+
+Now you have:
+
+```
+logs/
+└── openram_generation.log
+```
+
+---
+
+# Item 1.7 — Verify Generated Files
+
+Run:
+
+```bash
+find . -name "sram_2x16*"
+```
+
+Expected:
+
+```
+./sram_2x16.gds
+./sram_2x16.lef
+./sram_2x16.lib
+./sram_2x16.v
+./sram_2x16.sp
+```
+
+---
+
+## Before moving to Item 2, we need to confirm:
+
+Please run these commands and paste the output:
+
+```bash
+echo $OPENRAM_HOME
+echo $OPENRAM_TECH
+python3 -c "import openram; print('OpenRAM OK')"
+ls $OPENRAM_HOME
+```
+
+Then we will create the **correct SKY130 OpenRAM configuration** based on your installed version.
+
 
 --------------------------------------------------------------------------------------------------------------------------
 
