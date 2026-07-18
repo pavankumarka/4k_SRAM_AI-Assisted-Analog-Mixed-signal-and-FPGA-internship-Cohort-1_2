@@ -1,0 +1,401 @@
+B**Week 5** is focused on **Physical Verification, Post-Layout Characterization, and Validation** of a small OpenRAM-generated SRAM before scaling to the 4 KB SRAM.
+
+# Week 5 Task List
+
+## Phase 1 – Generate OpenRAM SRAM Macro
+
+**Goal:** Generate a small SRAM for validation.
+
+* [ ] Create OpenRAM configuration for **2-word × 16-bit Single-Port SRAM**
+* [ ] Run OpenRAM compiler
+* [ ] Save OpenRAM command history
+* [ ] Save OpenRAM logs
+* [ ] Verify successful SRAM generation
+
+### Deliverables
+
+* [ ] config.py
+* [ ] OpenRAM log
+* [ ] generated GDS
+* [ ] LEF
+* [ ] Liberty (.lib)
+* [ ] Verilog model
+* [ ] SPICE netlist
+
+---
+
+# Phase 2 – AI Audit of Generated Files
+
+Verify consistency across all generated views.
+
+## Pin Verification
+
+* [ ] Check all IO pins
+* [ ] Verify VDD
+* [ ] Verify GND
+* [ ] Verify CLK
+* [ ] Verify WE
+* [ ] Verify CS
+* [ ] Verify Address pins
+* [ ] Verify Data pins
+
+---
+
+## Bus Width Verification
+
+* [ ] Data bus = 16 bits
+* [ ] Address bus = 1 bit (2 words)
+* [ ] Output bus
+* [ ] Input bus
+
+---
+
+## Power Net Verification
+
+* [ ] VPWR
+* [ ] VGND
+* [ ] Well connections
+* [ ] Substrate connections
+
+---
+
+## Timing Model Verification
+
+Compare
+
+* [ ] Liberty
+* [ ] Verilog
+* [ ] SPICE
+
+Verify
+
+* [ ] setup
+* [ ] hold
+* [ ] access time
+* [ ] write delay
+* [ ] slew
+* [ ] load tables
+
+---
+
+## Feature Detection
+
+Identify whether these are enabled or disabled.
+
+* [ ] DRC
+* [ ] LVS
+* [ ] PEX
+* [ ] transistor characterization
+
+---
+
+# Phase 3 – Self Checking Regression Testbench
+
+Create a complete Verilog testbench.
+
+Test Cases
+
+### Basic Write
+
+* [ ] Write 0
+* [ ] Write 1
+
+---
+
+### Data Patterns
+
+* [ ] 0000
+* [ ] FFFF
+* [ ] AAAA
+* [ ] 5555
+* [ ] Random data
+
+---
+
+### Address Tests
+
+* [ ] Address 0
+* [ ] Address 1
+
+---
+
+### Read Verification
+
+* [ ] Read Address 0
+* [ ] Read Address 1
+* [ ] Read after write
+
+---
+
+### Sequential Operations
+
+* [ ] Back-to-back writes
+* [ ] Back-to-back reads
+* [ ] Read-Write
+* [ ] Write-Read
+
+---
+
+### Disabled Cycles
+
+* [ ] CS disabled
+* [ ] WE disabled
+
+---
+
+### Data Retention
+
+* [ ] Hold stored value
+* [ ] Verify after idle cycles
+
+---
+
+### Self Checking
+
+* [ ] PASS messages
+* [ ] FAIL messages
+* [ ] Automatic comparison
+* [ ] Error count
+* [ ] Final summary
+
+---
+
+# Phase 4 – Physical Verification
+
+## Magic DRC
+
+Run
+
+```
+magic
+```
+
+Tasks
+
+* [ ] Run DRC
+* [ ] Save DRC report
+* [ ] Fix DRC errors
+* [ ] Re-run DRC
+* [ ] Verify zero DRC errors
+
+Deliverables
+
+* [ ] DRC log
+* [ ] Screenshots
+
+---
+
+## Netgen LVS
+
+Run LVS
+
+Tasks
+
+* [ ] Layout vs SPICE
+* [ ] Verify connectivity
+* [ ] Compare devices
+* [ ] Fix mismatches
+* [ ] Re-run LVS
+
+Deliverables
+
+* [ ] LVS report
+* [ ] Netgen log
+
+---
+
+## Parasitic Extraction
+
+Using Magic
+
+Tasks
+
+* [ ] Extract parasitics
+* [ ] Generate extracted SPICE
+* [ ] Verify RC extraction
+
+Deliverables
+
+* [ ] Extracted SPICE
+* [ ] Extraction log
+
+---
+
+# Phase 5 – AI Assisted Error Analysis
+
+For every error
+
+* [ ] Classify error
+* [ ] Root cause
+* [ ] Suggested fix
+* [ ] Verify fix using EDA tool
+
+Possible errors
+
+* [ ] DRC
+* [ ] LVS
+* [ ] Extraction
+* [ ] Simulation
+* [ ] Timing
+
+---
+
+# Phase 6 – Post Layout Simulation
+
+Run ngspice on extracted SRAM.
+
+Corners
+
+* [ ] TT
+* [ ] FF
+* [ ] SS
+
+Measurements
+
+### Timing
+
+* [ ] Read access time
+* [ ] Write time
+
+---
+
+### Power
+
+* [ ] Leakage
+* [ ] Dynamic energy
+* [ ] Read energy
+* [ ] Write energy
+
+---
+
+### Save
+
+* [ ] Waveforms
+* [ ] Measurement logs
+
+---
+
+# Phase 7 – Liberty Comparison
+
+Compare measured values with OpenRAM Liberty.
+
+Compare
+
+* [ ] Read delay
+* [ ] Write delay
+* [ ] Access time
+* [ ] Leakage
+* [ ] Power
+
+Automatically flag
+
+* [ ] Negative values
+* [ ] Missing values
+* [ ] Large mismatch (>10% recommended threshold)
+
+Create comparison table.
+
+---
+
+# Phase 8 – SNM Analysis
+
+Extend previous SNM work.
+
+Measure
+
+* [ ] Hold SNM
+* [ ] Read SNM
+* [ ] Write SNM
+
+Compare
+
+| Metric    | Measured |
+| --------- | -------- |
+| Hold SNM  |          |
+| Read SNM  |          |
+| Write SNM |          |
+
+Discuss
+
+* [ ] Which margin is smallest?
+* [ ] Which operation is most critical?
+* [ ] Stability observations
+
+---
+
+# Phase 9 – Documentation
+
+Store everything in GitHub.
+
+Repository structure
+
+```
+week5/
+│
+├── config/
+├── openram/
+├── verilog/
+├── spice/
+├── liberty/
+├── gds/
+├── lef/
+├── magic/
+├── netgen/
+├── pex/
+├── simulation/
+├── waveforms/
+├── measurements/
+├── snm/
+├── scripts/
+├── prompts/
+├── logs/
+├── comparison/
+├── images/
+└── README.md
+```
+
+---
+
+# Phase 10 – Final Report
+
+Prepare a comprehensive README including:
+
+* [ ] Objective
+* [ ] OpenRAM configuration
+* [ ] Generated views
+* [ ] AI audit results
+* [ ] Regression testing summary
+* [ ] DRC results
+* [ ] LVS results
+* [ ] PEX results
+* [ ] Post-layout simulation results
+* [ ] Liberty vs measured comparison
+* [ ] SNM comparison
+* [ ] Errors encountered
+* [ ] Fixes applied
+* [ ] Final conclusions
+* [ ] References
+
+---
+
+## Expected Deliverables Checklist
+
+* ✅ OpenRAM configuration (`config.py`)
+* ✅ GDS layout
+* ✅ LEF file
+* ✅ Liberty (`.lib`)
+* ✅ Verilog model
+* ✅ SPICE netlist
+* ✅ Self-checking Verilog testbench
+* ✅ Magic DRC report
+* ✅ Netgen LVS report
+* ✅ PEX netlist
+* ✅ ngspice waveforms
+* ✅ TT/FF/SS characterization results
+* ✅ Liberty vs measured comparison table
+* ✅ Hold/Read/Write SNM analysis
+* ✅ AI prompts and generated scripts
+* ✅ Error logs and fixes
+* ✅ GitHub repository with complete documentation
+
+This task plan follows the progression from **SRAM generation → AI audit → functional verification → physical verification (DRC/LVS/PEX) → post-layout characterization → SNM analysis → documentation**, which is the expected workflow for Week 5 before moving on to validating the full 4 KB SRAM.
