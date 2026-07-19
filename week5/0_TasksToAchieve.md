@@ -1046,3 +1046,7 @@ Prepare a comprehensive README including:
 * ✅ GitHub repository with complete documentation
 
 This task plan follows the progression from **SRAM generation → AI audit → functional verification → physical verification (DRC/LVS/PEX) → post-layout characterization → SNM analysis → documentation**, which is the expected workflow for Week 5 before moving on to validating the full 4 KB SRAM.
+
+
+------------------------------------------------------------------
+#installation: https://chatgpt.com/share/6a5cf4b8-180c-83ee-8c40-b51279b3bdc8
