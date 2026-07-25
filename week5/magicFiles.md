@@ -4,3 +4,5 @@ Magic layout :
 
 <img width="1183" height="646" alt="Screenshot from 2026-07-25 20-50-35" src="https://github.com/user-attachments/assets/82c3313f-3a47-4a04-9603-faf235c50f9f" />
 
+<img width="968" height="646" alt="Screenshot from 2026-07-25 20-58-03" src="https://github.com/user-attachments/assets/f047a32b-19b3-40ce-a4fe-927a118b252b" />
+
